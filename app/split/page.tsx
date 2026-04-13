@@ -1,154 +1,200 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import * as StellarSdk from "stellar-sdk"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Plus, Users, IndianRupee, CheckCircle2, Clock, ArrowRight } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 
-const mockGroups = [
-  {
-    id: 1,
-    name: "Netflix Subscription",
-    members: [
-      { name: "Arjun", amount: 150, paid: true },
-      { name: "Priya", amount: 150, paid: true },
-      { name: "Rahul", amount: 150, paid: false },
-      { name: "Sneha", amount: 150, paid: true },
-    ],
-    total: 600,
-    color: "from-red-500/10 to-red-600/5",
-    iconColor: "text-red-500",
-  },
-  {
-    id: 2,
-    name: "Goa Trip Expenses",
-    members: [
-      { name: "Arjun", amount: 2500, paid: true },
-      { name: "Vikram", amount: 2500, paid: false },
-      { name: "Neha", amount: 2500, paid: true },
-    ],
-    total: 7500,
-    color: "from-blue-500/10 to-blue-600/5",
-    iconColor: "text-blue-500",
-  },
-  {
-    id: 3,
-    name: "Farewell Party",
-    members: [
-      { name: "Arjun", amount: 500, paid: true },
-      { name: "Priya", amount: 500, paid: true },
-      { name: "Rahul", amount: 500, paid: true },
-      { name: "Sneha", amount: 500, paid: true },
-      { name: "Amit", amount: 500, paid: false },
-    ],
-    total: 2500,
-    color: "from-purple-500/10 to-purple-600/5",
-    iconColor: "text-purple-500",
-  },
+const gradients = [
+  "from-red-500/10 to-red-600/5",
+  "from-blue-500/10 to-blue-600/5",
+  "from-purple-500/10 to-purple-600/5",
+  "from-emerald-500/10 to-emerald-600/5",
 ]
 
+// 🔥 SAFE SPLIT FUNCTION
+const splitAmount = (total: number, members: number) => {
+  const base = Math.floor(total / members)
+  const remainder = total % members
+
+  return Array.from({ length: members }).map((_, i) => ({
+    name: `User ${i + 1}`,
+    amount: i === members - 1 ? base + remainder : base,
+    paid: false,
+  }))
+}
+
 export default function SplitExpensesPage() {
+  const router = useRouter()
+
+  const [groups, setGroups] = useState<any[]>([])
+  const [showModal, setShowModal] = useState(false)
+
+  const [form, setForm] = useState({
+    name: "",
+    total: "",
+    members: 2,
+  })
+
+  // 🔥 LOAD FROM STORAGE
+  useEffect(() => {
+    const stored = localStorage.getItem("groups")
+
+    if (stored) {
+      setGroups(JSON.parse(stored))
+    } else {
+      setGroups([])
+    }
+  }, [])
+
+  const save = (data: any) => {
+    localStorage.setItem("groups", JSON.stringify(data))
+  }
+
+  // 🚀 STELLAR
+  const sendPayment = async () => {
+    alert("Demo payment done ✅")
+  }
+
+  const handleCreateGroup = () => {
+    if (!form.name || !form.total) return
+
+    const total = Number(form.total)
+    const members = Number(form.members)
+
+    const newGroup = {
+      id: Date.now(),
+      name: form.name,
+      total,
+      members: splitAmount(total, members), // 🔥 FIXED
+      color: gradients[Math.floor(Math.random() * gradients.length)], // 🔥 RANDOM
+    }
+
+    const updated = [newGroup, ...groups]
+
+    setGroups(updated)
+    save(updated)
+
+    setShowModal(false)
+    setForm({ name: "", total: "", members: 2 })
+  }
+
   return (
     <DashboardLayout title="Split Expenses">
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground">Manage shared subscriptions and split bills with friends</p>
-          <Button className="gap-2 shadow-md">
-            <Plus className="size-4" />
+
+        <div className="flex justify-between items-center">
+          <p className="text-muted-foreground">
+            Manage shared subscriptions and split bills
+          </p>
+
+          <Button onClick={() => setShowModal(true)}>
+            <Plus className="size-4 mr-1" />
             Create Group
           </Button>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {mockGroups.map((group) => {
+          {groups.map((group) => {
             const paidAmount = group.members
-              .filter((m) => m.paid)
-              .reduce((acc, m) => acc + m.amount, 0)
+              .filter((m: any) => m.paid)
+              .reduce((acc: number, m: any) => acc + m.amount, 0)
+
             const pendingAmount = group.total - paidAmount
-            const paidCount = group.members.filter((m) => m.paid).length
             const progress = (paidAmount / group.total) * 100
 
             return (
-              <Card key={group.id} className={`border-border/40 bg-gradient-to-br ${group.color} transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1.5">
-                      <CardTitle className="text-lg font-semibold">{group.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-1.5 text-xs">
-                        <Users className="size-3.5" />
-                        {group.members.length} members
-                      </CardDescription>
-                    </div>
-                    <div className={`flex size-11 items-center justify-center rounded-xl bg-background/80 shadow-sm ${group.iconColor}`}>
-                      <IndianRupee className="size-5" />
-                    </div>
-                  </div>
+              <Card key={group.id} className={`bg-gradient-to-br ${group.color}`}>
+                <CardHeader>
+                  <CardTitle>{group.name}</CardTitle>
+                  <CardDescription>{group.members.length} members</CardDescription>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{paidCount}/{group.members.length} paid</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-background/60">
-                      <p className="text-xs text-muted-foreground mb-1">Total</p>
-                      <p className="text-lg font-bold text-foreground">₹{group.total.toLocaleString()}</p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-background/60">
-                      <p className="text-xs text-muted-foreground mb-1">Pending</p>
-                      <p className={`text-lg font-bold ${pendingAmount > 0 ? "text-orange-500" : "text-emerald-500"}`}>
-                        ₹{pendingAmount.toLocaleString()}
-                      </p>
-                    </div>
+
+                  <Progress value={progress} />
+
+                  <div className="flex justify-between text-sm">
+                    <span>Total: ₹{group.total}</span>
+                    <span>Pending: ₹{pendingAmount}</span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex -space-x-2">
-                      {group.members.slice(0, 4).map((member, idx) => (
-                        <Avatar key={idx} className="size-8 border-2 border-card ring-0">
-                          <AvatarFallback className={`text-xs font-medium ${member.paid ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}`}>
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {group.members.length > 4 && (
-                        <Avatar className="size-8 border-2 border-card">
-                          <AvatarFallback className="text-xs bg-muted font-medium">
-                            +{group.members.length - 4}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      {pendingAmount > 0 ? (
-                        <>
-                          <Clock className="size-3.5 text-orange-500" />
-                          <span>Pending</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="size-3.5 text-emerald-500" />
-                          <span>Settled</span>
-                        </>
-                      )}
-                    </div>
+                  <div className="flex gap-2">
+
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push(`/group/${group.id}`)}
+                      className="flex-1"
+                    >
+                      View
+                    </Button>
+
+                    <Button
+                      onClick={sendPayment}
+                      className="flex-1 bg-black text-white"
+                    >
+                      Pay with Stellar 💫
+                    </Button>
+
                   </div>
 
-                  <Button variant="outline" className="w-full bg-background/80 border-border/50 group-hover:bg-background">
-                    View Details
-                    <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
                 </CardContent>
               </Card>
             )
           })}
         </div>
+
+        {/* MODAL */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+
+            <div className="bg-[#0f172a] p-6 rounded-xl w-[350px] space-y-4 border border-white/10">
+
+              <h2 className="text-white text-lg font-semibold">
+                Create Group
+              </h2>
+
+              <input
+                placeholder="Group Name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full p-2 bg-[#020817] text-white rounded"
+              />
+
+              <input
+                type="number"
+                placeholder="Total Amount"
+                value={form.total}
+                onChange={(e) => setForm({ ...form, total: e.target.value })}
+                className="w-full p-2 bg-[#020817] text-white rounded"
+              />
+
+              <input
+                type="number"
+                placeholder="Members"
+                value={form.members}
+                onChange={(e) => setForm({ ...form, members: Number(e.target.value) })}
+                className="w-full p-2 bg-[#020817] text-white rounded"
+              />
+
+              <div className="flex justify-between">
+                <Button onClick={() => setShowModal(false)}>
+                  Cancel
+                </Button>
+
+                <Button onClick={handleCreateGroup}>
+                  Create
+                </Button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   )

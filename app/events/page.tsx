@@ -7,10 +7,26 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Clock, Users, ArrowRight, Sparkles } from "lucide-react"
 
 const mockEvents = [
+  // 🔥 YOUR EVENT (FIRST)
+  {
+    id: 0,
+    title: "Hackaccino 4.0 🚀",
+    date: "31st March, 2026",
+    time: "24 Hour Hackathon",
+    location: "Open for All Colleges",
+    description:
+      "⏳ FINAL CALL! Registrations close on 31st March. 24-hour hackathon with 15+ Lakh prize pool, free food, unlimited coffee, internships, and certificates for all. Open for Web Dev, AI/ML, App Dev, Blockchain.",
+    category: "Technology",
+    attendees: 1000,
+    featured: true,
+    link: "https://hackculture.io/hackathon/hackaccino?ref=devops",
+  },
+
+  // ORIGINAL EVENTS (UNCHANGED)
   {
     id: 1,
-    title: "Technospark 2024",
-    date: "15th March, 2024",
+    title: "Technospark 2026",
+    date: "15th March, 2026",
     time: "10:00 AM",
     location: "Main Auditorium",
     description: "Annual technical fest featuring hackathons, coding competitions, robotics, and tech talks by industry experts.",
@@ -21,7 +37,7 @@ const mockEvents = [
   {
     id: 2,
     title: "Rang Tarang - Cultural Fest",
-    date: "20th March, 2024",
+    date: "20th March, 2026",
     time: "6:00 PM",
     location: "Open Air Theatre",
     description: "Celebrate with music, dance, drama, and cultural performances including classical and folk traditions.",
@@ -32,7 +48,7 @@ const mockEvents = [
   {
     id: 3,
     title: "Campus Placement Drive",
-    date: "25th March, 2024",
+    date: "25th March, 2026",
     time: "9:00 AM",
     location: "Placement Cell, Block A",
     description: "Connect with top companies like TCS, Infosys, Wipro and explore internship and job opportunities.",
@@ -43,7 +59,7 @@ const mockEvents = [
   {
     id: 4,
     title: "Khel Mahotsav",
-    date: "1st April, 2024",
+    date: "1st April, 2026",
     time: "8:00 AM",
     location: "Sports Complex",
     description: "Inter-branch sports competition featuring cricket, football, badminton, and athletics.",
@@ -54,7 +70,7 @@ const mockEvents = [
   {
     id: 5,
     title: "Workshop: AI & ML with Python",
-    date: "5th April, 2024",
+    date: "5th April, 2026",
     time: "2:00 PM",
     location: "Computer Lab 1",
     description: "Hands-on workshop on artificial intelligence and machine learning using TensorFlow and Keras.",
@@ -83,7 +99,7 @@ export default function EventsPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           {mockEvents.map((event) => {
             const style = categoryStyles[event.category]
-            
+
             return (
               <Card key={event.id} className={`border-border/40 bg-gradient-to-br ${style.gradient} transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group overflow-hidden`}>
                 <CardHeader className="pb-3">
@@ -107,8 +123,10 @@ export default function EventsPage() {
                     </div>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
                   <CardDescription className="line-clamp-2 leading-relaxed">{event.description}</CardDescription>
+
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2.5 text-muted-foreground p-2.5 rounded-lg bg-background/50">
                       <Calendar className="size-4 shrink-0" />
@@ -127,10 +145,20 @@ export default function EventsPage() {
                       <span>{event.attendees} attending</span>
                     </div>
                   </div>
-                  <Button className="w-full shadow-sm group-hover:shadow-md transition-shadow">
+
+                  {/* 🔥 REGISTER BUTTON WITH LINK */}
+                  <Button
+                    className="w-full shadow-sm group-hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      if (event.link) {
+                        window.open(event.link, "_blank")
+                      }
+                    }}
+                  >
                     Register Now
                     <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                   </Button>
+
                 </CardContent>
               </Card>
             )

@@ -67,11 +67,18 @@ const featureCards = [
 export default function DashboardPage() {
   return (
     <DashboardLayout title="Dashboard">
+      
+      {/* HEADER */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">Welcome back, Arjun</h2>
-        <p className="text-muted-foreground mt-1">Here&apos;s what&apos;s happening on campus today.</p>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">
+          Welcome back, Arjun
+        </h2>
+        <p className="text-muted-foreground mt-1">
+          Here's what's happening on campus today.
+        </p>
       </div>
 
+      {/* FEATURE CARDS */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {featureCards.map((card) => (
           <Link key={card.title} href={card.href} className="group">
@@ -83,7 +90,9 @@ export default function DashboardPage() {
                   </div>
                   <ArrowUpRight className="size-4 text-muted-foreground opacity-0 -translate-x-1 translate-y-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0" />
                 </div>
-                <CardTitle className="text-base font-semibold mt-4">{card.title}</CardTitle>
+                <CardTitle className="text-base font-semibold mt-4">
+                  {card.title}
+                </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <CardDescription className="text-sm leading-relaxed">
@@ -95,60 +104,43 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+      {/* QUICK STATS ONLY */}
+      <div className="mt-8">
         <Card className="border-border/40">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Quick Stats</CardTitle>
+            <CardTitle className="text-base font-semibold">
+              Quick Stats
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
+              
               <div className="text-center p-4 rounded-xl bg-secondary/50">
                 <p className="text-2xl font-bold text-foreground">12</p>
-                <p className="text-xs text-muted-foreground mt-1">Notes Shared</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Notes Shared
+                </p>
               </div>
+
               <div className="text-center p-4 rounded-xl bg-secondary/50">
                 <p className="text-2xl font-bold text-foreground">3</p>
-                <p className="text-xs text-muted-foreground mt-1">Active Groups</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active Groups
+                </p>
               </div>
+
               <div className="text-center p-4 rounded-xl bg-secondary/50">
                 <p className="text-2xl font-bold text-foreground">5</p>
-                <p className="text-xs text-muted-foreground mt-1">Upcoming Events</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upcoming Events
+                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="border-border/40">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Upcoming Classes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50">
-                <div className="size-2 rounded-full bg-blue-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Data Structures</p>
-                  <p className="text-xs text-muted-foreground">9:00 AM - Room 301</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50">
-                <div className="size-2 rounded-full bg-emerald-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Computer Networks</p>
-                  <p className="text-xs text-muted-foreground">11:00 AM - Room 205</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50">
-                <div className="size-2 rounded-full bg-orange-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">DBMS Lab</p>
-                  <p className="text-xs text-muted-foreground">2:00 PM - Lab 102</p>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
     </DashboardLayout>
   )
 }

@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge"
 import { Pencil, Mail, Phone, GraduationCap, Calendar, FileText, Download, Users, Star } from "lucide-react"
 
 const userProfile = {
-  name: "Arjun Sharma",
-  email: "arjun.sharma@college.ac.in",
+  name: "Arjun",
+  email: "s24cseu1867@bennett.edu.in",
   phone: "+91 98765 43210",
   branch: "Computer Science & Engineering",
-  semester: "6th Semester",
-  rollNo: "CSE2021045",
-  joinedYear: "2021",
+  semester: "4th Semester",
+  rollNo: "S24CSEU1867",
+  joinedYear: "2024",
   avatar: "",
 }
 

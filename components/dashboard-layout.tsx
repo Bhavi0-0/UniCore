@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import {
   SidebarProvider,
   Sidebar,
@@ -30,6 +31,7 @@ import {
   PartyPopper,
   Bell,
 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -49,10 +51,34 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const pathname = usePathname()
-  const router = useRouter()
+  const [userData, setUserData] = useState<any>(null)
 
-  const handleLogout = () => {
-    router.push("/")
+  // ✅ FETCH USER DATA
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: authData } = await supabase.auth.getUser()
+
+      if (!authData.user) {
+        window.location.href = "/" // 🔒 protect dashboard
+        return
+      }
+
+      const { data } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authData.user.id)
+        .single()
+
+      setUserData(data)
+    }
+
+    getUser()
+  }, [])
+
+  // ✅ REAL LOGOUT
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = "/"
   }
 
   return (
@@ -63,17 +89,20 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-md">
               U
             </div>
-            <span className="text-xl font-bold text-sidebar-foreground tracking-tight">UniCore</span>
+            <span className="text-xl font-bold text-sidebar-foreground tracking-tight">
+              UniCore
+            </span>
           </Link>
         </SidebarHeader>
+
         <SidebarContent className="px-3">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       isActive={pathname === item.href}
                       className="h-11 px-4 rounded-xl transition-all"
                     >
@@ -88,15 +117,24 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+
+        {/* ✅ USER INFO */}
         <SidebarFooter className="px-6 py-4 border-t border-sidebar-border/50">
           <div className="flex items-center gap-3">
             <Avatar className="size-9 ring-2 ring-sidebar-border/50">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User avatar" />
-              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">AS</AvatarFallback>
+              <AvatarImage src="/placeholder-avatar.jpg" />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                {userData?.name?.[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
+
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate">Arjun Sharma</p>
-              <p className="text-xs text-muted-foreground truncate">CSE 2021</p>
+              <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                {userData?.name || "User"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {userData?.branch} {userData?.year}
+              </p>
             </div>
           </div>
         </SidebarFooter>
@@ -107,32 +145,24 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div className="h-6 w-px bg-border/50 hidden sm:block" />
-            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{title}</h1>
+            <h1 className="text-lg font-semibold text-foreground hidden sm:block">
+              {title}
+            </h1>
           </div>
+
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-muted-foreground hover:text-foreground rounded-xl"
-            >
+            <Button variant="ghost" size="icon">
               <Bell className="size-5" />
-              <span className="sr-only">Notifications</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-muted-foreground hover:text-foreground rounded-xl"
-              onClick={handleLogout}
-            >
+
+            {/* ✅ LOGOUT BUTTON */}
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
               <LogOut className="size-5" />
-              <span className="sr-only">Logout</span>
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )

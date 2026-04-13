@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,13 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Upload, Search, FileText, Download, Eye, TrendingUp } from "lucide-react"
 
-const mockNotes = [
-  { id: 1, title: "Data Structures Notes", subject: "Computer Science", semester: "3rd", author: "Arjun Sharma", downloads: 45 },
-  { id: 2, title: "Engineering Mathematics II", subject: "Mathematics", semester: "2nd", author: "Priya Patel", downloads: 32 },
-  { id: 3, title: "Physics Lab Manual", subject: "Physics", semester: "1st", author: "Rahul Verma", downloads: 28 },
-  { id: 4, title: "DBMS Notes (AKTU)", subject: "Computer Science", semester: "4th", author: "Sneha Gupta", downloads: 56 },
-  { id: 5, title: "Organic Chemistry", subject: "Chemistry", semester: "3rd", author: "Vikram Singh", downloads: 19 },
-]
+const STORAGE_KEY = "notes_storage"
 
 const subjectColors: Record<string, string> = {
   "Computer Science": "from-blue-500/10 to-blue-600/5 text-blue-600",
@@ -24,111 +18,186 @@ const subjectColors: Record<string, string> = {
 }
 
 export default function NotesPage() {
+  const [notes, setNotes] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [subjectFilter, setSubjectFilter] = useState("all")
   const [semesterFilter, setSemesterFilter] = useState("all")
 
-  const filteredNotes = mockNotes.filter((note) => {
-    const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesSubject = subjectFilter === "all" || note.subject === subjectFilter
-    const matchesSemester = semesterFilter === "all" || note.semester === semesterFilter
-    return matchesSearch && matchesSubject && matchesSemester
+  const [showModal, setShowModal] = useState(false)
+
+  const [form, setForm] = useState({
+    title: "",
+    subject: "Computer Science",
+    semester: "1st",
+    author: "",
+    cgpa: "",
+  })
+
+  // LOAD
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      setNotes(JSON.parse(stored))
+    }
+  }, [])
+
+  const save = (data: any) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  }
+
+  // UPLOAD
+  const handleUpload = () => {
+    if (!form.title || !form.author) return
+
+    const newNote = {
+      id: Date.now(),
+      ...form,
+      downloads: 0,
+    }
+
+    const updated = [newNote, ...notes]
+    setNotes(updated)
+    save(updated)
+
+    setShowModal(false)
+    setForm({
+      title: "",
+      subject: "Computer Science",
+      semester: "1st",
+      author: "",
+      cgpa: "",
+    })
+  }
+
+  const handleDelete = (id: number) => {
+    const updated = notes.filter((n) => n.id !== id)
+    setNotes(updated)
+    save(updated)
+  }
+
+  const filteredNotes = notes.filter((note) => {
+    return (
+      note.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (subjectFilter === "all" || note.subject === subjectFilter) &&
+      (semesterFilter === "all" || note.semester === semesterFilter)
+    )
   })
 
   return (
     <DashboardLayout title="Notes Hub">
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground">Upload and access study notes from your peers</p>
-          <Button className="gap-2 shadow-md">
-            <Upload className="size-4" />
+
+        <div className="flex justify-between">
+          <p className="text-muted-foreground">Upload and access study notes</p>
+
+          <Button onClick={() => setShowModal(true)}>
+            <Upload className="size-4 mr-1" />
             Upload Notes
           </Button>
         </div>
 
-        <Card className="border-border/40 bg-secondary/30">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search notes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-11 h-11 bg-background border-border/50"
-                />
-              </div>
-              <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                <SelectTrigger className="w-full sm:w-48 h-11 bg-background border-border/50">
-                  <SelectValue placeholder="Filter by subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Subjects</SelectItem>
-                  <SelectItem value="Computer Science">Computer Science</SelectItem>
-                  <SelectItem value="Mathematics">Mathematics</SelectItem>
-                  <SelectItem value="Physics">Physics</SelectItem>
-                  <SelectItem value="Chemistry">Chemistry</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={semesterFilter} onValueChange={setSemesterFilter}>
-                <SelectTrigger className="w-full sm:w-40 h-11 bg-background border-border/50">
-                  <SelectValue placeholder="Semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Semesters</SelectItem>
-                  <SelectItem value="1st">1st Semester</SelectItem>
-                  <SelectItem value="2nd">2nd Semester</SelectItem>
-                  <SelectItem value="3rd">3rd Semester</SelectItem>
-                  <SelectItem value="4th">4th Semester</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        <Input
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredNotes.map((note) => {
-            const colorClass = subjectColors[note.subject] || "from-slate-500/10 to-slate-600/5 text-slate-600"
-            const iconColorClass = colorClass.split(" ")[2] || "text-primary"
-            
+            const colorClass =
+              subjectColors[note.subject] ||
+              "from-slate-500/10 to-slate-600/5 text-slate-600"
+
             return (
-              <Card key={note.id} className={`border-border/40 bg-gradient-to-br ${colorClass.split(" ").slice(0, 2).join(" ")} transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`flex size-11 items-center justify-center rounded-xl bg-background/80 shadow-sm ${iconColorClass}`}>
-                      <FileText className="size-5" />
-                    </div>
-                    <div className="flex-1 space-y-1 min-w-0">
-                      <CardTitle className="text-base line-clamp-1">{note.title}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {note.subject} • {note.semester} Sem
-                      </CardDescription>
-                    </div>
-                  </div>
+              <Card key={note.id} className={`bg-gradient-to-br ${colorClass.split(" ").slice(0, 2).join(" ")}`}>
+
+                <CardHeader>
+                  <CardTitle>{note.title}</CardTitle>
+                  <CardDescription>
+                    {note.subject} • {note.semester}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <span>By {note.author}</span>
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="size-3" />
-                      {note.downloads}
-                    </span>
+
+                <CardContent className="space-y-3">
+
+                  <p className="text-sm">
+                    By <span className="font-semibold">{note.author}</span>
+                  </p>
+
+                  {/* 🔥 CGPA */}
+                  <p className="text-xs text-muted-foreground">
+                    CGPA: {note.cgpa || "N/A"}
+                  </p>
+
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Downloads: {note.downloads}</span>
                   </div>
+
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 gap-1.5 bg-background/80 border-border/50">
+
+                    <Button size="sm" variant="outline" className="flex-1">
                       <Eye className="size-3.5" />
                       View
                     </Button>
-                    <Button size="sm" className="flex-1 gap-1.5 shadow-sm">
+
+                    <Button size="sm" className="flex-1">
                       <Download className="size-3.5" />
                       Download
                     </Button>
+
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className="text-red-400 text-xs"
+                    >
+                      ✕
+                    </button>
+
                   </div>
+
                 </CardContent>
               </Card>
             )
           })}
         </div>
+
+        {/* MODAL */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+
+            <div className="bg-[#0f172a] p-6 rounded-xl w-[350px] space-y-4">
+
+              <h2 className="text-white text-lg">Upload Notes</h2>
+
+              <input
+                placeholder="Title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="w-full p-2 bg-black text-white"
+              />
+
+              <input
+                placeholder="Author"
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                className="w-full p-2 bg-black text-white"
+              />
+
+              <input
+                placeholder="CGPA"
+                value={form.cgpa}
+                onChange={(e) => setForm({ ...form, cgpa: e.target.value })}
+                className="w-full p-2 bg-black text-white"
+              />
+
+              <div className="flex justify-between">
+                <Button onClick={() => setShowModal(false)}>Cancel</Button>
+                <Button onClick={handleUpload}>Upload</Button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   )
